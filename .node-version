@@ -1,3 +1,0 @@
-$ node --version
-v18.17.0
-$ node --version > .node-version
