@@ -1,1 +1,1 @@
-# course-node-js
+# Course Node js
