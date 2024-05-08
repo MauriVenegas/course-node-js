@@ -1,4 +1,3 @@
-import { log } from "node:console";
 import { readJSON } from "../../utils.js";
 const movies = readJSON('./movies.json')
 import { randomUUID } from 'node:crypto'
