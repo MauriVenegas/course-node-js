@@ -5,15 +5,16 @@ import { createClient } from '@libsql/client'
 import { Server } from 'socket.io'
 import { createServer } from 'node:http'
 
-dotenv.config()
+dotenv.config() // Carga archivo .env
 const port = process.env.PORT ?? 3000
 
 const app = express()
 const server = createServer(app)
 const io = new Server(server, {
-  connectionStateRecovery: {},
+  connectionStateRecovery: {}, // Recupera los datos enviados y recibidos (los mensajes del chat)
 })
 
+// Crea la conexión con Turso (SQL)
 const db = createClient({
   url: 'libsql://useful-black-queen-maurivenegas.turso.io',
   authToken: process.env.DB_TOKEN,
@@ -27,6 +28,7 @@ await db.execute(`
   )
 `)
 
+// Escucha mensajes a través del socket
 io.on('connection', async (socket) => {
   console.log('An user has connected!')
 
@@ -34,6 +36,7 @@ io.on('connection', async (socket) => {
     console.log('An user has disconnected!')
   })
 
+  // Escuchando mensaje para ser insertado en la bd
   socket.on('chat message', async (msg) => {
     let result
     let username = socket.handshake.auth.username ?? 'anonymous'
@@ -46,9 +49,11 @@ io.on('connection', async (socket) => {
       console.error(e)
       return
     }
+    // Después de guardar ne la bd envía la cliente el mensaje, id y usuario insertado
     io.emit('chat message', msg, result.lastInsertRowid.toString(), username)
   })
 
+  // Al recuperar la conexión si el socket no recupera los mensajes los obtiene desde la bd
   if (!socket.recovered) {
     try {
       const result = await db.execute({
@@ -61,6 +66,8 @@ io.on('connection', async (socket) => {
     } catch (e) {}
   }
 })
+
+// Middleware que muestra el registro de solicitudes http
 app.use(logger('dev'))
 
 app.get('/', (req, res) => {
